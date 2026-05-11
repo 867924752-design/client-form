@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>金申律所 — 债务优化客户登记</title>
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --gold: #c9a96e;
+    --bg: #f5f3ef;
+    --white: #fff;
+    --text: #333;
+    --border: #ddd;
+    --danger: #c0392b;
+    --success: #27ae60;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 80px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary), #2c5f8a);
+    color: #fff; padding: 20px 16px; text-align: center;
+  }
+  .header .firm { font-size: 13px; letter-spacing: 2px; opacity: 0.8; }
+  .header h1 { font-size: 20px; margin-top: 4px; font-weight: 600; }
+
+  /* Container */
+  .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+  /* Section card */
+  .card {
+    background: var(--white); border-radius: 12px; padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-size: 15px; font-weight: 600; margin-bottom: 14px;
+    padding-left: 10px; border-left: 3px solid var(--gold);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title .required-badge {
+    font-size: 11px; color: var(--danger); font-weight: 400;
+  }
+
+  /* Field */
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 500; margin-bottom: 3px; color: #555;
+  }
+  .field label .req { color: var(--danger); }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 15px; background: var(--white);
+    transition: border-color 0.2s; -webkit-appearance: none; font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,58,92,0.08);
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .field .hint { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .field input.error, .field select.error, .field textarea.error { border-color: var(--danger); }
+
+  /* Row (side by side) */
+  .row { display: flex; gap: 10px; }
+  .row .field { flex: 1; }
+
+  /* Radio */
+  .radio-group { display: flex; gap: 16px; }
+  .radio-group label {
+    display: flex; align-items: center; gap: 4px; font-weight: 400;
+    cursor: pointer; font-size: 15px; color: var(--text);
+  }
+  .radio-group input[type="radio"] { width: auto; accent-color: var(--primary); }
+
+  /* Debt type selector */
+  .type-checkboxes {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .type-chip {
+    flex: 1; min-width: 90px; text-align: center;
+    padding: 12px 8px; border: 2px solid var(--border); border-radius: 10px;
+    cursor: pointer; font-size: 14px; font-weight: 500;
+    transition: all 0.2s; user-select: none; background: #fafafa;
+  }
+  .type-chip.checked {
+    border-color: var(--primary); background: #eef3f8; color: var(--primary);
+  }
+
+  /* Debt entry block */
+  .debt-entry {
+    background: #f9f8f6; border: 1px dashed var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 10px; position: relative;
+  }
+  .debt-entry .sub-title {
+    font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;
+    margin: 14px 0 8px; padding-left: 8px; border-left: 3px solid var(--gold);
+  }
+  .debt-entry .entry-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; font-size: 13px; color: #888;
+  }
+  .debt-entry .entry-header .entry-num { font-weight: 600; color: var(--primary); }
+  .debt-entry .remove-btn {
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ddd;
+    background: #fff; color: #999; font-size: 16px; line-height: 24px;
+    text-align: center; cursor: pointer;
+  }
+
+  /* Add button */
+  .add-btn {
+    width: 100%; padding: 10px; border: 2px dashed var(--border);
+    border-radius: 10px; background: none; color: #888; font-size: 14px;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  }
+  .add-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* Hidden sections */
+  .type-section { display: none; }
+  .type-section.visible { display: block; }
+
+  /* Submit bar */
+  .submit-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white); padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    z-index: 10; max-width: 600px; margin: 0 auto;
+  }
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--primary), #2c5f8a);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: 17px; font-weight: 600; cursor: pointer; letter-spacing: 1px;
+  }
+  .submit-btn:active { opacity: 0.85; }
+  .submit-btn.loading { opacity: 0.6; pointer-events: none; }
+
+  /* Success overlay */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .overlay-card {
+    background: #fff; border-radius: 16px; padding: 32px 24px;
+    text-align: center; max-width: 300px; width: 90%;
+  }
+  .overlay-card .icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #e8f5e9; color: var(--success); font-size: 28px;
+    line-height: 56px; margin: 0 auto 12px;
+  }
+  .overlay-card h3 { font-size: 18px; margin-bottom: 8px; }
+  .overlay-card p { color: #888; font-size: 13px; margin-bottom: 16px; }
+  .overlay-card button {
+    padding: 10px 32px; background: var(--primary); color: #fff;
+    border: none; border-radius: 8px; font-size: 15px; cursor: pointer;
+  }
+
+  .footer {
+    text-align: center; padding: 16px; color: #bbb; font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="firm">金申律师事务所 · 债务优化</div>
+  <h1>客户信息登记表</h1>
+</div>
+
+<div class="container">
+<form id="clientForm">
+
+  <!-- ═══ 个人信息（共用） ═══ -->
+  <div class="card">
+    <div class="card-title">个人信息 <span class="required-badge">*必填</span></div>
+    <div class="row">
+      <div class="field">
+        <label><span class="req">*</span> 姓名</label>
+        <input name="name" placeholder="请输入姓名" required>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span> 性别</label>
+        <select name="gender">
+          <option value="">请选择</option>
+          <option>男</option><option>女</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label><span class="req">*</span> 身份证号码</label>
+      <input name="id_number" placeholder="请输入18位身份证号" maxlength="18">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>生肖</label>
+        <select name="zodiac">
+          <option value="">请选择</option>
+          <option>鼠</option><option>牛</option><option>虎</option><option>兔</option>
+          <option>龙</option><option>蛇</option><option>马</option><option>羊</option>
+          <option>猴</option><option>鸡</option><option>狗</option><option>猪</option>
+        </select>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span> 预留手机号</label>
+        <input name="phone" type="tel" maxlength="11" placeholder="银行预留手机号" required>
+      </div>
+    </div>
+    <div class="field">
+      <label>户籍地址</label>
+      <input name="household_address" placeholder="省/市/区">
+    </div>
+    <div class="field">
+      <label>现居住地</label>
+      <input name="residence" placeholder="省/市/区">
+    </div>
+    <div class="field">
+      <label>紧急联系人（姓名 + 关系 + 电话）</label>
+      <input name="emergency_contact" placeholder="如：张三 父亲 138xxxx">
+    </div>
+  </div>
+
+  <!-- ═══ 债务类型选择 ═══ -->
+  <div class="card">
+    <div class="card-title">欠款类型 <span style="font-size:12px;color:#888;font-weight:400;">（可多选）</span></div>
+    <div class="type-checkboxes" id="typeSelector">
+      <div class="type-chip checked" data-type="wd">网贷</div>
+      <div class="type-chip" data-type="xyk">信用卡</div>
+      <div class="type-chip" data-type="xd">信贷 / 企业贷</div>
+    </div>
+  </div>
+
+  <!-- ═══ 网贷 ═══ -->
+  <div class="card type-section visible" id="sec-wd">
+    <div class="card-title">网贷债务</div>
+    <div id="wd-entries">
+      <!-- Entry template -->
+      <div class="debt-entry wd-entry">
+        <div class="entry-header">
+          <span class="entry-num">平台 1</span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label><span class="req">*</span> 平台名称</label>
+            <input name="wd_platform_1" placeholder="如：借呗" required>
+          </div>
+          <div class="field">
+            <label><span class="req">*</span> 欠款金额（元）</label>
+            <input name="wd_amount_1" type="number" placeholder="金额" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否逾期</label>
+            <select name="wd_overdue_1">
+              <option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>查询密码</label>
+            <input name="wd_password_1" placeholder="平台登录查询密码">
+          </div>
+        </div>
+        <div class="field">
+          <label>绑定银行卡</label>
+          <input name="wd_bank_1" placeholder="如：建设银行">
+        </div>
+        <div class="field">
+          <label>完整银行卡号</label>
+          <input name="wd_card_1" placeholder="请填写完整卡号">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>最近到期还款日</label>
+            <input name="wd_due_1" placeholder="如：6月15日">
+          </div>
+          <div class="field">
+            <label>最近一笔还款金额</label>
+            <input name="wd_lastpay_1" type="number" placeholder="元">
+          </div>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="add-btn" data-section="wd">+ 添加其他网贷平台</button>
+  </div>
+
+  <!-- ═══ 信用卡 ═══ -->
+  <div class="card type-section" id="sec-xyk">
+    <div class="card-title">信用卡债务</div>
+    <div id="xyk-entries">
+      <div class="debt-entry xyk-entry">
+        <div class="entry-header">
+          <span class="entry-num">银行 1</span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label><span class="req">*</span> 银行名称</label>
+            <input name="xyk_bank_1" placeholder="如：建设银行" required>
+          </div>
+          <div class="field">
+            <label><span class="req">*</span> 欠款额（元）</label>
+            <input name="xyk_debt_1" type="number" placeholder="含本金+利息" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>卡号</label>
+            <input name="xyk_card_1" placeholder="信用卡卡号">
+          </div>
+          <div class="field">
+            <label>固定额度（元）</label>
+            <input name="xyk_limit_1" type="number" placeholder="固定额度">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>查询密码</label>
+            <input name="xyk_password_1" placeholder="电话查询密码">
+          </div>
+          <div class="field">
+            <label>预留邮箱</label>
+            <input name="xyk_email_1" type="email" placeholder="银行预留邮箱">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>账单日</label>
+            <input name="xyk_bill_1" placeholder="如：每月5日">
+          </div>
+          <div class="field">
+            <label>还款日</label>
+            <input name="xyk_repay_1" placeholder="如：每月25日">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否逾期</label>
+            <select name="xyk_overdue_1">
+              <option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>最后一次还款日</label>
+            <input name="xyk_lastpay_1" placeholder="如：5月1日">
+          </div>
+        </div>
+        <div class="field">
+          <label>单位全称（办卡时填写）</label>
+          <input name="xyk_company_1" placeholder="办卡时填写的单位名称">
+        </div>
+        <div class="field">
+          <label>单位地址</label>
+          <input name="xyk_company_addr_1" placeholder="办卡时填写的地址">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label><span class="req">*</span> 联系人姓名</label>
+            <input name="xyk_contact_name_1" placeholder="办卡时填的联系人">
+          </div>
+          <div class="field">
+            <label>联系人关系</label>
+            <input name="xyk_contact_rel_1" placeholder="如：配偶">
+          </div>
+        </div>
+        <div class="field">
+          <label>联系人电话</label>
+          <input name="xyk_contact_phone_1" type="tel" maxlength="11">
+        </div>
+      </div>
+    </div>
+    <button type="button" class="add-btn" data-section="xyk">+ 添加其他银行信用卡</button>
+  </div>
+
+  <!-- ═══ 信贷/企业贷 ═══ -->
+  <div class="card type-section" id="sec-xd">
+    <div class="card-title">信贷 / 企业贷 <span style="font-size:12px;color:#888;font-weight:400;">（个人信息如上，此处填贷款详情）</span></div>
+    <div id="xd-entries">
+      <div class="debt-entry xd-entry">
+        <div class="entry-header">
+          <span class="entry-num">贷款 1</span>
+        </div>
+
+        <!-- 基本信息补充 -->
+        <div class="sub-title">基本信息</div>
+        <div class="row">
+          <div class="field">
+            <label><span class="req">*</span> 贷款类型</label>
+            <select name="xd_type_1" required>
+              <option value="">请选择</option>
+              <option>个人信贷</option><option>企业贷</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>签署方式</label>
+            <input name="xd_sign_method_1" placeholder="如：线上签署 / 线下面签">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否逾期</label>
+            <select name="xd_overdue_1">
+              <option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>本次到期还款日</label>
+            <input name="xd_due_1" placeholder="如：6月15日">
+          </div>
+        </div>
+
+        <!-- 还款详情 -->
+        <div class="sub-title">还款详情</div>
+        <div class="field">
+          <label><span class="req">*</span> 贷款产品全称</label>
+          <input name="xd_product_1" placeholder="如：建设银行个人消费贷" required>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label><span class="req">*</span> 贷款总金额（元）</label>
+            <input name="xd_total_1" type="number" required>
+          </div>
+          <div class="field">
+            <label><span class="req">*</span> 剩余未还金额（元）</label>
+            <input name="xd_remain_1" type="number" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>分期总期数</label>
+            <input name="xd_periods_1" type="number" placeholder="如：36">
+          </div>
+          <div class="field">
+            <label>剩余未还期数</label>
+            <input name="xd_remain_periods_1" type="number">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否还款超6期</label>
+            <select name="xd_over6_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>还款方式</label>
+            <input name="xd_repay_method_1" placeholder="如：等额本息、先息后本">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>每月还款金额（元）</label>
+            <input name="xd_monthly_1" type="number">
+          </div>
+          <div class="field">
+            <label>每月最多可偿还金额（元）</label>
+            <input name="xd_max_monthly_1" type="number" placeholder="大概金额">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>最近一笔借款金额（元）</label>
+            <input name="xd_last_borrow_1" type="number">
+          </div>
+          <div class="field">
+            <label>借款时间</label>
+            <input name="xd_borrow_time_1" placeholder="如：2025年3月">
+          </div>
+        </div>
+        <div class="field">
+          <label>本产品每月最多可偿还（元）</label>
+          <input name="xd_this_max_monthly_1" type="number" placeholder="针对本笔贷款">
+        </div>
+
+        <!-- 机构与联系信息 -->
+        <div class="sub-title">机构与联系信息</div>
+        <div class="field">
+          <label>资金放款方</label>
+          <input name="xd_lender_1" placeholder="借款合同查询，具体到地方分行，多个都写">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>有无客户经理微信</label>
+            <select name="xd_has_manager_1">
+              <option value="">请选择</option><option value="有">有</option><option value="无">无</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>业务经理电话</label>
+            <input name="xd_manager_phone_1" type="tel" maxlength="11">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>近期有无与经理联系</label>
+            <select name="xd_contacted_manager_1">
+              <option value="">请选择</option><option value="有">有</option><option value="无">无</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>办理地点</label>
+            <input name="xd_location_1" placeholder="精确到市区镇">
+          </div>
+        </div>
+
+        <!-- 个人与账户信息（补充） -->
+        <div class="sub-title">个人与账户信息（补充）</div>
+        <div class="row">
+          <div class="field">
+            <label>是否已婚</label>
+            <select name="xd_married_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>交易密码</label>
+            <input name="xd_tx_password_1" placeholder="银行交易密码">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>绑定银行</label>
+            <input name="xd_bound_bank_1" placeholder="如：建设银行">
+          </div>
+          <div class="field">
+            <label>完整银行卡号</label>
+            <input name="xd_card_1" placeholder="请填写完整卡号">
+          </div>
+        </div>
+        <div class="field">
+          <label>现所在地（省/市/区）</label>
+          <input name="xd_current_loc_1" placeholder="省/市/区">
+        </div>
+
+        <!-- 工作与资产 -->
+        <div class="sub-title">工作与资产</div>
+        <div class="field">
+          <label>借款时填写单位名称</label>
+          <input name="xd_orig_company_1" placeholder="借款时填写的单位">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>现在有无固定工作</label>
+            <select name="xd_has_job_1">
+              <option value="">请选择</option><option value="有">有</option><option value="无">无</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>工作内容</label>
+            <input name="xd_job_content_1" placeholder="具体工作内容">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>月收入（元）</label>
+            <input name="xd_income_1" type="number">
+          </div>
+          <div class="field">
+            <label>家里几口人</label>
+            <input name="xd_family_size_1" type="number" placeholder="人数">
+          </div>
+        </div>
+        <div class="field">
+          <label>名下总欠款（元）</label>
+          <input name="xd_total_debt_1" type="number" placeholder="所有债务总和">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>名下有无房/车</label>
+            <input name="xd_assets_1" placeholder="如：有房无车">
+          </div>
+          <div class="field">
+            <label>名下有无公司/企业</label>
+            <input name="xd_has_biz_1" placeholder="含小店面">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>公司名称</label>
+            <input name="xd_company_name_1" placeholder="如有公司/企业的全称">
+          </div>
+          <div class="field">
+            <label>现在是否经营</label>
+            <select name="xd_biz_running_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>法人是否本人</label>
+            <select name="xd_is_legal_person_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>公司月净利润（元）</label>
+            <input name="xd_biz_profit_1" type="number">
+          </div>
+        </div>
+        <div class="field">
+          <label>外面未收回钱（元）</label>
+          <input name="xd_outstanding_1" type="number" placeholder="别人欠你的未收回款项">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否抵押</label>
+            <select name="xd_mortgage_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>是否找助贷公司</label>
+            <select name="xd_helper_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>是否有担保人</label>
+            <select name="xd_guarantor_1">
+              <option value="">请选择</option><option value="是">是</option><option value="否">否</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 还款计划与欠款原因 -->
+        <div class="sub-title">还款计划与欠款原因</div>
+        <div class="field">
+          <label>打算多久结清 / 每月计划偿还金额</label>
+          <input name="xd_plan_1" placeholder="以实际收入为基础">
+        </div>
+        <div class="field">
+          <label>真实欠款原因</label>
+          <textarea name="xd_debt_reason_1" placeholder="详细说明资金用途、收入变化、逾期原因等" rows="2"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>资金当时用途</label>
+            <input name="xd_fund_use_1" placeholder="资金当时的用途">
+          </div>
+          <div class="field">
+            <label>收入近期变化</label>
+            <input name="xd_income_change_1" placeholder="如：失业、降薪、创业失败等">
+          </div>
+        </div>
+        <div class="field">
+          <label>逾期原因</label>
+          <input name="xd_overdue_reason_1" placeholder="逾期的具体原因">
+        </div>
+      </div>
+    </div>
+    <button type="button" class="add-btn" data-section="xd">+ 添加其他贷款</button>
+  </div>
+
+</form>
+</div>
+
+<!-- Submit -->
+<div class="submit-bar">
+  <button type="button" class="submit-btn" id="submitBtn" onclick="doSubmit()">提 交 登 记</button>
+</div>
+
+<div class="footer">
+  <p>金申律师事务所 · 客服电话：400-8869-620</p>
+</div>
+
+<!-- Success -->
+<div class="overlay" id="successOverlay">
+  <div class="overlay-card">
+    <div class="icon">&#10003;</div>
+    <h3>提交成功</h3>
+    <p>您的资料已登记，法务顾问将在1个工作日内与您联系，请保持手机畅通。</p>
+    <button onclick="document.getElementById('successOverlay').classList.remove('show')">确 定</button>
+  </div>
+</div>
+
+<script>
+// ── Type chip toggles ──
+document.querySelectorAll('.type-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chip.classList.toggle('checked');
+    const type = chip.dataset.type;
+    const section = document.getElementById('sec-' + type);
+    section.classList.toggle('visible', chip.classList.contains('checked'));
+  });
+});
+
+// ── Add entry buttons ──
+const entryCount = { wd: 1, xyk: 1, xd: 1 };
+
+function makeRemoveBtn(sectionId, entryDiv, addBtn) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'remove-btn';
+  btn.textContent = '✕';
+  btn.title = '删除此项';
+  btn.addEventListener('click', () => {
+    entryDiv.remove();
+    // Re-number remaining entries
+    renumber(sectionId);
+    // If all entries removed, show section as empty or collapse
+    const section = document.getElementById('sec-' + sectionId);
+    const remaining = section.querySelectorAll('.debt-entry');
+    if (remaining.length === 0) {
+      // Add back an empty entry
+      addEntry(sectionId, addBtn);
+    }
+  });
+  return btn;
+}
+
+function renumber(sectionId) {
+  const section = document.getElementById('sec-' + sectionId);
+  const entries = section.querySelectorAll('.debt-entry');
+  const labels = { wd: '平台', xyk: '银行', xd: '贷款' };
+  entries.forEach((entry, i) => {
+    const num = i + 1;
+    const label = labels[sectionId] || '';
+    entry.querySelector('.entry-num').textContent = label + ' ' + num;
+    // Update input names with new index
+    entry.querySelectorAll('[name]').forEach(input => {
+      const oldName = input.name;
+      const newName = oldName.replace(/_\d+$/, '_' + num);
+      input.name = newName;
+    });
+    // Show/hide remove button
+    let rmBtn = entry.querySelector('.remove-btn');
+    if (entries.length > 1 && !rmBtn) {
+      rmBtn = makeRemoveBtn(sectionId, entry, section.querySelector('.add-btn'));
+      entry.querySelector('.entry-header').appendChild(rmBtn);
+    } else if (entries.length <= 1 && rmBtn) {
+      rmBtn.remove();
+    }
+  });
+}
+
+function addEntry(sectionId, addBtn) {
+  const section = document.getElementById('sec-' + sectionId);
+  const entries = section.querySelector('.debt-entry');
+  if (!entries) return;
+
+  entryCount[sectionId]++;
+
+  const clone = entries.cloneNode(true);
+  const num = entryCount[sectionId];
+
+  // Update clone
+  const label = { wd: '平台', xyk: '银行', xd: '贷款' }[sectionId] || '';
+  clone.querySelector('.entry-num').textContent = label + ' ' + num;
+
+  // Clear all inputs
+  clone.querySelectorAll('input, textarea').forEach(el => {
+    if (el.type === 'radio' || el.type === 'checkbox') {
+      el.checked = false;
+    } else {
+      el.value = '';
+    }
+  });
+  // Reset selects to first option
+  clone.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
+
+  // Update input names with new number
+  clone.querySelectorAll('[name]').forEach(input => {
+    const oldName = input.name;
+    const newName = oldName.replace(/_\d+$/, '_' + num);
+    input.name = newName;
+  });
+
+  // Add remove button
+  const header = clone.querySelector('.entry-header');
+  const rmBtn = document.createElement('button');
+  rmBtn.type = 'button';
+  rmBtn.className = 'remove-btn';
+  rmBtn.textContent = '✕';
+  rmBtn.title = '删除此项';
+  rmBtn.addEventListener('click', () => {
+    clone.remove();
+    renumber(sectionId);
+  });
+  header.appendChild(rmBtn);
+
+  document.getElementById(sectionId + '-entries').appendChild(clone);
+  renumber(sectionId);
+}
+
+document.querySelectorAll('.add-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sectionId = btn.dataset.section;
+    addEntry(sectionId, btn);
+  });
+});
+
+// ── Initial: ensure 1st entries have remove btns hidden ──
+['wd','xyk','xd'].forEach(id => {
+  const section = document.getElementById('sec-' + id);
+  if (section && section.classList.contains('visible')) {
+    renumber(id);
+  }
+});
+
+// ── Submit ──
+function doSubmit() {
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading');
+  btn.textContent = '正在提交...';
+
+  // Check at least one debt type selected
+  const checkedTypes = document.querySelectorAll('.type-chip.checked');
+  if (checkedTypes.length === 0) {
+    alert('请至少选择一种债务类型（网贷 / 信用卡 / 信贷企业贷）');
+    btn.classList.remove('loading');
+    btn.textContent = '提 交 登 记';
+    return;
+  }
+
+  // Collect ALL form data
+  const allData = {};
+  document.querySelectorAll('#clientForm input, #clientForm select, #clientForm textarea').forEach(el => {
+    if (!el.name) return;
+    if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) return;
+    const val = el.value.trim();
+    if (val) allData[el.name] = val;
+  });
+
+  // Validate: check required fields in visible sections only
+  let valid = true;
+  document.querySelectorAll('.type-section.visible [required]').forEach(el => {
+    if (!el.value.trim()) {
+      el.classList.add('error');
+      valid = false;
+    }
+  });
+
+  // Also validate personal info (always visible)
+  document.querySelectorAll('.card:first-of-type [required]').forEach(el => {
+    if (!el.value.trim()) {
+      el.classList.add('error');
+      valid = false;
+    }
+  });
+
+  if (!valid) {
+    alert('请填写所有必填项（带 * 的字段）');
+    btn.classList.remove('loading');
+    btn.textContent = '提 交 登 记';
+    return;
+  }
+
+  // Build readable text
+  let text = '【金申律所 · 客户债务登记】\n\n';
+  text += '── 个人信息 ──\n';
+  const personalFields = ['name','gender','id_number','zodiac','phone','household_address','residence','emergency_contact'];
+  const personalLabels = {name:'姓名',gender:'性别',id_number:'身份证号',zodiac:'生肖',phone:'手机号',household_address:'户籍地址',residence:'现居住地',emergency_contact:'紧急联系人'};
+  personalFields.forEach(key => {
+    if (allData[key]) text += personalLabels[key] + '：' + allData[key] + '\n';
+  });
+
+  const types = [];
+  if (document.getElementById('sec-wd').classList.contains('visible')) types.push('wd');
+  if (document.getElementById('sec-xyk').classList.contains('visible')) types.push('xyk');
+  if (document.getElementById('sec-xd').classList.contains('visible')) types.push('xd');
+
+  types.forEach(type => {
+    const typeLabel = {wd:'网贷', xyk:'信用卡', xd:'信贷/企业贷'}[type];
+    text += '\n── ' + typeLabel + ' ──\n';
+    // Group by entry number
+    const entries = document.getElementById('sec-' + type).querySelectorAll('.debt-entry');
+    entries.forEach((entry, ei) => {
+      const num = ei + 1;
+      const typeLabel2 = {wd:'平台', xyk:'银行', xd:'贷款'}[type];
+      text += '  【' + typeLabel2 + ' ' + num + '】\n';
+      entry.querySelectorAll('input, select, textarea').forEach(el => {
+        if (!el.name || !el.value.trim()) return;
+        if (el.type === 'radio' && !el.checked) return;
+        const label = el.closest('.field')?.querySelector('label')?.textContent?.replace(/\*/g, '').trim() || el.name;
+        text += '  ' + label + '：' + el.value.trim() + '\n';
+      });
+    });
+  });
+
+  text += '\n── 提交时间：' + new Date().toLocaleString() + ' ──';
+
+  // Try to copy + show
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById('successOverlay').classList.add('show');
+      document.getElementById('clientForm').reset();
+      // Reset type selector
+      document.querySelectorAll('.type-chip').forEach((c, i) => {
+        if (i === 0) c.classList.add('checked'); else c.classList.remove('checked');
+      });
+      document.querySelectorAll('.type-section').forEach((s, i) => {
+        s.classList.toggle('visible', i === 0);
+      });
+    }).catch(() => {
+      alert('已生成您的资料，请截图或复制发送给客服。\n\n' + text);
+    });
+  } else {
+    alert('已生成您的资料，请截图或复制发送给客服。\n\n' + text);
+  }
+
+  btn.classList.remove('loading');
+  btn.textContent = '提 交 登 记';
+}
+</script>
+
+</body>
+</html>
