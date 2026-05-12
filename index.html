@@ -223,8 +223,12 @@
       <input name="residence" placeholder="省/市/区">
     </div>
     <div class="field">
-      <label>紧急联系人（姓名 + 关系 + 电话）</label>
+      <label>紧急联系人1（姓名 + 关系 + 电话）</label>
       <input name="emergency_contact" placeholder="如：张三 父亲 138xxxx">
+    </div>
+    <div class="field">
+      <label>紧急联系人2（姓名 + 关系 + 电话）</label>
+      <input name="emergency_contact2" placeholder="如：李四 配偶 139xxxx">
     </div>
   </div>
 
@@ -858,8 +862,8 @@ function doSubmit() {
   // Build readable text
   let text = '【金申律所 · 客户债务登记】\n\n';
   text += '── 个人信息 ──\n';
-  const personalFields = ['name','gender','id_number','zodiac','phone','household_address','residence','emergency_contact'];
-  const personalLabels = {name:'姓名',gender:'性别',id_number:'身份证号',zodiac:'生肖',phone:'手机号',household_address:'户籍地址',residence:'现居住地',emergency_contact:'紧急联系人'};
+  const personalFields = ['name','gender','id_number','zodiac','phone','household_address','residence','emergency_contact','emergency_contact2'];
+  const personalLabels = {name:'姓名',gender:'性别',id_number:'身份证号',zodiac:'生肖',phone:'手机号',household_address:'户籍地址',residence:'现居住地',emergency_contact:'紧急联系人1',emergency_contact2:'紧急联系人2'};
   personalFields.forEach(key => {
     if (allData[key]) text += personalLabels[key] + '：' + allData[key] + '\n';
   });
